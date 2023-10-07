@@ -245,7 +245,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
-    font_garamond = QFontDatabase.addApplicationFont("LibreBaskerville-Regular.ttf")
+    font_garamond = QFontDatabase.addApplicationFont("./LibreBaskerville-Regular.ttf")
     fontstr = QFontDatabase.applicationFontFamilies(font_garamond)[0]
     font = QFont(fontstr, 14)
     app.setFont(font)
