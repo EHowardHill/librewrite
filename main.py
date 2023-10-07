@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
     QScrollArea,
     QWidget,
     QLineEdit,
+    QMessageBox,
 )
 from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont
 
@@ -80,6 +81,25 @@ class WindowMenu(QWidget):
 
         self.layout = main_hv
         self.refresh()
+
+    def save_to_drive(self):
+
+        uid = os.getuid()
+        gid = os.getgid()
+
+        try:
+            os.system(f"sudo mount -o uid={uid},gid={gid} /dev/sdb1 /mnt")
+            os.system("mkdir -p /mnt/stories")
+            os.system("cp -r ./stories/* /mnt/stories")
+            os.system("cp -r /mnt/stories/* ./stories")
+            os.system("sudo umount /mnt")
+            self.sync_btn.setText("Sync to USB")
+        except Exception as e:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Critical)
+            msg.setText(str(e))
+            msg.setWindowTitle("Error Alert")
+            msg.exec()
 
     def switch_to_new_file(self):
         self.load_file.emit(self.text_input.text())
