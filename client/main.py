@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QMessageBox,
 )
-from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont
+from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont, QPixmap
 
 
 def resolve_name(fn):
@@ -49,7 +49,14 @@ class WindowMenu(QWidget):
                 )
                 self.file_layout.addWidget(file_button)
 
+    def sync(self):
+        pass
+
     def initUI(self):
+
+        pixmap = QPixmap('patterns/leaves.jpg')
+        self.setStyleSheet(f"background-image: url({pixmap}); background-position: center;")
+
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
         scroll_widget = QWidget()
@@ -68,14 +75,29 @@ class WindowMenu(QWidget):
         self.button.clicked.connect(self.switch_to_new_file)
         self.new_layout.addWidget(self.button)
 
+        self.extra_layout = QVBoxLayout()
+
+        self.label_id = QLabel("a8392")
+        self.label_id.setStyleSheet("QLabel{font-size: 48pt;}")
+        self.btn_sync = QPushButton("Sync to Gnimble.live *")
+        self.btn_sync.setFixedWidth(256)
+        self.btn_sync.clicked.connect(self.sync)
+
+        self.extra_layout.addStretch()
+        self.extra_layout.addWidget(self.label_id)
+        self.extra_layout.addWidget(self.btn_sync)
+        self.extra_layout_widget = QWidget()
+        self.extra_layout_widget.setLayout(self.extra_layout)
+
         main_hv = QHBoxLayout(self)
-        main_widget = QWidget(self)
-        main_widget.setFixedWidth(480)
+        self.main_widget = QWidget(self)
+        self.main_widget.setFixedWidth(480)
 
-        main_hv.addWidget(main_widget)
+        main_hv.addWidget(self.main_widget)
         main_hv.addStretch()
+        main_hv.addWidget(self.extra_layout_widget)
 
-        main_layout = QVBoxLayout(main_widget)
+        main_layout = QVBoxLayout(self.main_widget)
         main_layout.addWidget(self.new_element)
         main_layout.addWidget(scroll_area)
 
@@ -83,7 +105,6 @@ class WindowMenu(QWidget):
         self.refresh()
 
     def save_to_drive(self):
-
         uid = os.getuid()
         gid = os.getgid()
 
@@ -221,6 +242,7 @@ class WindowText(QWidget):
         self.file_name = define_name(name)
         self.load_text()
         self.save_button.setText(self.file_name)
+
 
 class MainWindow(QStackedWidget):
     def __init__(self):
