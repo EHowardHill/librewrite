@@ -54,9 +54,6 @@ class WindowMenu(QWidget):
 
     def initUI(self):
 
-        pixmap = QPixmap('patterns/leaves.jpg')
-        self.setStyleSheet(f"background-image: url({pixmap}); background-position: center;")
-
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
         scroll_widget = QWidget()
@@ -76,9 +73,8 @@ class WindowMenu(QWidget):
         self.new_layout.addWidget(self.button)
 
         self.extra_layout = QVBoxLayout()
-
         self.label_id = QLabel("a8392")
-        self.label_id.setStyleSheet("QLabel{font-size: 48pt;}")
+        self.label_id.setStyleSheet("QLabel { font-size: 48pt; padding: 10px; }")
         self.btn_sync = QPushButton("Sync to Gnimble.live *")
         self.btn_sync.setFixedWidth(256)
         self.btn_sync.clicked.connect(self.sync)
@@ -86,8 +82,6 @@ class WindowMenu(QWidget):
         self.extra_layout.addStretch()
         self.extra_layout.addWidget(self.label_id)
         self.extra_layout.addWidget(self.btn_sync)
-        self.extra_layout_widget = QWidget()
-        self.extra_layout_widget.setLayout(self.extra_layout)
 
         main_hv = QHBoxLayout(self)
         self.main_widget = QWidget(self)
@@ -95,7 +89,7 @@ class WindowMenu(QWidget):
 
         main_hv.addWidget(self.main_widget)
         main_hv.addStretch()
-        main_hv.addWidget(self.extra_layout_widget)
+        main_hv.addLayout(self.extra_layout)
 
         main_layout = QVBoxLayout(self.main_widget)
         main_layout.addWidget(self.new_element)
@@ -184,10 +178,6 @@ class WindowText(QWidget):
         layout.addWidget(self.text_edit)
         layout.addWidget(button_bar)
 
-        scroll_area = QScrollArea()
-        scroll_area.setWidget(self.text_edit)
-        scroll_area.setWidgetResizable(True)
-
         self.setLayout(layout)
         self.load_text()
 
@@ -250,6 +240,7 @@ class MainWindow(QStackedWidget):
         self.initUI()
 
     def initUI(self):
+
         window_menu = WindowMenu(self)
         self.addWidget(window_menu)
 
@@ -267,17 +258,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
 
-    font_garamond = QFontDatabase.addApplicationFont("./LibreBaskerville-Regular.ttf")
+    font_garamond = QFontDatabase.addApplicationFont("./YoungSerif-Regular.ttf")
     fontstr = QFontDatabase.applicationFontFamilies(font_garamond)[0]
     font = QFont(fontstr, 14)
     app.setFont(font)
 
     dark_stylesheet = """
         QStackedWidget {
-            background-color: black;
-            background-repeat: no-repeat;
+            background-image: url('patterns/leaves.jpg');
             background-position: center;
+            background-size: cover;
             color: white;
+        }
+        QScrollArea {
+            background-color: black;
         }
         QWidget {
             background-color: black;

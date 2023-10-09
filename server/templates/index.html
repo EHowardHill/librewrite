@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Young+Serif&display=swap');
 
         body {
             display: flex;
@@ -26,12 +26,14 @@
             border-width: 16px;
             border-color: white;
             box-sizing: border-box;
-            font-family: 'Libre Baskerville', serif !important;
+            font-family: 'Young Serif', serif;
             font-size: large;
+
+            background-image: url("../static/leaves.png");
         }
 
         p {
-            font-family: 'Libre Baskerville', serif !important;
+            font-family: 'Young Serif', serif;
             font-size: large !important;
         }
 
@@ -61,7 +63,8 @@
                 <div style="flex: 1;"> </div>
                 <div id="storyList">
                     {% for entry in entries %}
-                    <button class="btn btn-outline-dark stretch" type="button" onclick='load("{{ entry[0] }}")'> {{ entry[1] }}
+                    <button class="btn btn-outline-dark stretch" type="button" onclick='load("{{ entry[0] }}")'> {{
+                        entry[1] }}
                     </button>
                     {% endfor %}
                 </div>
