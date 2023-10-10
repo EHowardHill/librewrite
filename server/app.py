@@ -1,8 +1,15 @@
 from flask import Flask, request, render_template
-from os import listdir, path
+from os import listdir, path, makedirs, path
+from json import loads, dumps
+import random
+import string
 
 app = Flask(__name__)
 
+def random_combo(length=5):
+    characters = string.ascii_letters + string.digits
+    random_combination = ''.join(random.choice(characters) for _ in range(length))
+    return random_combination
 
 def decode(t):
     return t.replace("_", " ").replace(".md", "")
@@ -50,5 +57,21 @@ def api():
         with open("stories/" + encode(request.form.get("name")), "w") as f:
             f.writelines(request.form.get("content").split("\n"))
         return {"success": 1}
+    
+    elif request.form.get("method") == "retrieve_id":
+        mac = request.form.get("mac_address")
+
+        if not path.exists("stories/" + mac):
+            makedirs("stories/" + mac)
+
+        data = {}
+        with open("devices.json", "r") as f:
+            data = loads("\n".join(f.readlines()))
+        code = random_combo()
+        data[mac] = code
+        with open("devices.json", "w") as f:
+            f.writelines(dumps(data).split('\n'))
+
+        return {"success": 1, "code": code}
 
     return {"success": 0}

@@ -1,6 +1,6 @@
 import sys
-import os
-from PyQt5.QtCore import Qt, pyqtSignal
+import pywifi
+from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtWidgets import (
     QApplication,
     QLabel,
@@ -15,6 +15,18 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont, QPixmap
+from requests import post
+from os import system, listdir, getuid, getgid
+
+
+def get_wifi_ssids():
+    wifi = pywifi.PyWiFi()
+    ssids = []
+    iface = wifi.interfaces()[0]
+    iface.scan()
+    scan_results = iface.scan_results()
+    ssids = list(sorted(set([result.ssid for result in scan_results if result.ssid != ""])))
+    return ssids
 
 
 def resolve_name(fn):
@@ -25,6 +37,98 @@ def define_name(fn):
     return fn.replace("_", " ").replace(".md", "")
 
 
+class RetrieveID(QThread):
+    finished = pyqtSignal(str)
+
+    def run(self):
+        # https://gnimble.live
+        try:
+            mac = system("ip link show | awk '/ether/ {print $2}' | tail -n 1")
+            response = post(
+                "http://127.0.0.1:5000",
+                data={"method": "retrieve_id", "mac_address": mac},
+            )
+            data = response.json()
+            self.finished.emit(data["code"])
+        except:
+            self.finished.emit("connect to the internet\nto sync documents")
+
+
+class WindowSettings(QWidget):
+    def __init__(self, main_window):
+        super().__init__()
+        self.main_window = main_window
+        self.initUI()
+
+    def switch_to_textedit(self, name):
+        self.addPassword(name)
+
+    def refresh(self):
+        for i in reversed(range(self.file_layout.count())):
+            widget = self.file_layout.itemAt(i).widget()
+            if widget:
+                widget.deleteLater()
+        self.file_layout.addStretch()
+        self.file_list = get_wifi_ssids()
+        print(self.file_list)
+        for filename in self.file_list:
+            file_button = QPushButton(define_name(filename), self)
+            file_button.clicked.connect(
+                lambda _, name=filename: self.switch_to_textedit(name)
+            )
+            self.file_layout.addWidget(file_button)
+
+    def addPassword(self, name):
+        self.pw_layout.addStretch()
+        self.pw_label = QLabel(name)
+        self.pw_label.setStyleSheet("QLabel { font-size: 48pt; padding: 10px; }")
+        self.pw_layout.addWidget(self.pw_label)
+        self.pw_text = QLineEdit()
+        self.pw_layout.addWidget(self.pw_text)
+        self.pw_select = QPushButton("Connect")
+        self.pw_layout.addWidget(self.pw_select)
+        self.pw_layout.addStretch()
+
+    def initUI(self):
+        scroll_area = QScrollArea(self)
+        scroll_area.setWidgetResizable(True)
+        scroll_widget = QWidget()
+        scroll_area.setWidget(scroll_widget)
+
+        self.file_layout = QVBoxLayout()
+        scroll_widget.setLayout(self.file_layout)
+
+        main_hv = QHBoxLayout(self)
+        self.main_widget = QWidget(self)
+        self.main_widget.setFixedWidth(480)
+
+        self.pw_layout = QVBoxLayout()
+
+        main_hv.addWidget(self.main_widget)
+        main_hv.addStretch()
+        main_hv.addLayout(self.pw_layout)
+        main_hv.addStretch()
+
+        main_layout = QVBoxLayout(self.main_widget)
+        main_layout.addWidget(scroll_area)
+
+        self.layout = main_hv
+
+        for i in reversed(range(self.file_layout.count())):
+            widget = self.file_layout.itemAt(i).widget()
+            if widget:
+                widget.deleteLater()
+        self.file_layout.addStretch()
+        self.file_list = get_wifi_ssids()
+        print(self.file_list)
+        for filename in self.file_list:
+            file_button = QPushButton(define_name(filename), self)
+            file_button.clicked.connect(
+                lambda _, name=filename: self.switch_to_textedit(name)
+            )
+            self.file_layout.addWidget(file_button)
+
+
 class WindowMenu(QWidget):
     load_file = pyqtSignal(str)
 
@@ -33,6 +137,14 @@ class WindowMenu(QWidget):
         self.main_window = main_window
         self.initUI()
 
+    def retrieve_id(self):
+        self.worker_thread = RetrieveID()
+        self.worker_thread.finished.connect(self.update_label)
+        self.worker_thread.start()
+
+    def update_label(self, text):
+        self.label_id.setText(text)
+
     def refresh(self):
         self.text_input.setText("")
         for i in reversed(range(self.file_layout.count())):
@@ -40,7 +152,7 @@ class WindowMenu(QWidget):
             if widget:
                 widget.deleteLater()
         self.file_layout.addStretch()
-        self.file_list = os.listdir("stories")
+        self.file_list = listdir("stories")
         for filename in self.file_list:
             if filename.endswith(".md"):
                 file_button = QPushButton(define_name(filename), self)
@@ -50,10 +162,9 @@ class WindowMenu(QWidget):
                 self.file_layout.addWidget(file_button)
 
     def sync(self):
-        pass
+        self.main_window.setCurrentIndex(2)
 
     def initUI(self):
-
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
         scroll_widget = QWidget()
@@ -73,23 +184,23 @@ class WindowMenu(QWidget):
         self.new_layout.addWidget(self.button)
 
         self.extra_layout = QVBoxLayout()
-        self.label_id = QLabel("a8392")
+        self.label_id = QLabel("")
         self.label_id.setStyleSheet("QLabel { font-size: 48pt; padding: 10px; }")
         self.btn_sync = QPushButton("Sync to Gnimble.live *")
         self.btn_sync.setFixedWidth(256)
         self.btn_sync.clicked.connect(self.sync)
 
-        self.extra_layout.addStretch()
         self.extra_layout.addWidget(self.label_id)
         self.extra_layout.addWidget(self.btn_sync)
+        self.extra_layout.addStretch()
 
         main_hv = QHBoxLayout(self)
         self.main_widget = QWidget(self)
         self.main_widget.setFixedWidth(480)
 
-        main_hv.addWidget(self.main_widget)
-        main_hv.addStretch()
         main_hv.addLayout(self.extra_layout)
+        main_hv.addStretch()
+        main_hv.addWidget(self.main_widget)
 
         main_layout = QVBoxLayout(self.main_widget)
         main_layout.addWidget(self.new_element)
@@ -97,17 +208,18 @@ class WindowMenu(QWidget):
 
         self.layout = main_hv
         self.refresh()
+        self.retrieve_id()
 
     def save_to_drive(self):
-        uid = os.getuid()
-        gid = os.getgid()
+        uid = getuid()
+        gid = getgid()
 
         try:
-            os.system(f"sudo mount -o uid={uid},gid={gid} /dev/sdb1 /mnt")
-            os.system("mkdir -p /mnt/stories")
-            os.system("cp -r ./stories/* /mnt/stories")
-            os.system("cp -r /mnt/stories/* ./stories")
-            os.system("sudo umount /mnt")
+            system(f"sudo mount -o uid={uid},gid={gid} /dev/sdb1 /mnt")
+            system("mkdir -p /mnt/stories")
+            system("cp -r ./stories/* /mnt/stories")
+            system("cp -r /mnt/stories/* ./stories")
+            system("sudo umount /mnt")
             self.sync_btn.setText("Sync to USB")
         except Exception as e:
             msg = QMessageBox()
@@ -240,12 +352,14 @@ class MainWindow(QStackedWidget):
         self.initUI()
 
     def initUI(self):
-
         window_menu = WindowMenu(self)
         self.addWidget(window_menu)
 
         window_text = WindowText(self)
         self.addWidget(window_text)
+
+        window_settings = WindowSettings(self)
+        self.addWidget(window_settings)
 
         self.setWindowTitle("Gnimble")
         self.setGeometry(app.primaryScreen().geometry())
@@ -267,7 +381,6 @@ if __name__ == "__main__":
         QStackedWidget {
             background-image: url('patterns/leaves.jpg');
             background-position: center;
-            background-size: cover;
             color: white;
         }
         QScrollArea {
