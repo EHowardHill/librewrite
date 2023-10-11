@@ -50,51 +50,80 @@
 </head>
 
 <body>
-    <!-- Story select screen -->
-    <div id="menuSelect" style="width: 100%; height: 100%;">
-        <div style="width: 480px; height: 100%; display: flex; flex-direction: column;">
-            <div class="input-group mb-3">
-                <input id="newStoryName" type="text" class="form-control" style="border-color: cornflowerblue;"
-                    placeholder="Story Name" aria-label="" aria-describedby="button-addon2">
-                <button class="btn btn-outline-dark" type="button" id="btn-new"
-                    onclick="load($('#newStoryName').val())">New</button>
-            </div>
-            <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
-                <div style="flex: 1;"> </div>
-                <div id="storyList">
-                    {% for entry in entries %}
-                    <button class="btn btn-outline-dark stretch" type="button" onclick='load("{{ entry[0] }}")'> {{
-                        entry[1] }}
-                    </button>
-                    {% endfor %}
+
+    <div id="login" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+        <div style="flex: 1;"> </div>
+        <center>
+            <h1>Gnimble.live</h1>
+            <input onkeyup="codeCheck()" id="code" class="form-control"
+                style="border-color: cornflowerblue; width: 320px;" placeholder="Enter Your Device Code" aria-label=""
+                aria-describedby="button-addon2">
+        </center>
+        <div style="flex: 1;"> </div>
+    </div>
+
+    <div id="loggedIn" style="width: 100%; height: 100%;">
+        <!-- Story select screen -->
+        <div id="menuSelect" style="width: 100%; height: 100%;">
+            <div style="width: 480px; height: 100%; display: flex; flex-direction: column;">
+                <div class="input-group mb-3">
+                    <input id="newStoryName" type="text" class="form-control" style="border-color: cornflowerblue;"
+                        placeholder="Story Name" aria-label="" aria-describedby="button-addon2">
+                    <button class="btn btn-outline-dark" type="button" id="btn-new"
+                        onclick="load($('#newStoryName').val())">New</button>
+                </div>
+                <div style="background-color: white; flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                    <div style="flex: 1;"> </div>
+                    <div id="storyList">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Actual word editing part -->
-    <div id="menuEdit" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-        <div id="editor" style="padding-bottom: 12px;">
+        <!-- Actual word editing part -->
+        <div id="menuEdit" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+            <div id="editor" style="padding-bottom: 12px;">
 
-        </div>
-        <div style="display: flex; flex-direction: row;">
-            <button class="btn btn-outline-dark" type="button" id="btn-bold" style="font-weight: bold;"
-                onclick="editor.exec('bold');">B</button>
-            <button class="btn btn-outline-dark" type="button" id="btn-italic" style="font-style: italic;"
-                onclick="editor.exec('italic');">I</button>
-            <div style="flex: 1;"> </div>
-            <div id="wordcount">0</div>
-            <div style="flex: 1;"> </div>
-            <button class="btn btn-outline-dark" type="button" id="btn-save" onclick="save()"></button>
-            <button class="btn btn-outline-dark" type="button" id="btn-back" onclick="back()">Back</button>
+            </div>
+            <div style="display: flex; flex-direction: row;">
+                <button class="btn btn-outline-dark" type="button" id="btn-bold" style="font-weight: bold;"
+                    onclick="editor.exec('bold');">B</button>
+                <button class="btn btn-outline-dark" type="button" id="btn-italic" style="font-style: italic;"
+                    onclick="editor.exec('italic');">I</button>
+                <div style="flex: 1;"> </div>
+                <div id="wordcount">0</div>
+                <div style="flex: 1;"> </div>
+                <button class="btn btn-outline-dark" type="button" id="btn-save" onclick="save()"></button>
+                <button class="btn btn-outline-dark" type="button" id="btn-back" onclick="back()">Back</button>
+            </div>
         </div>
     </div>
 
     <script>
         var editor;
-        var name = "New Year's Eve";
-        var user = "ethan";
+        var name = "";
+        var user = "";
+        var code = "";
         const Editor = toastui.Editor;
+
+        function codeCheck() {
+            let localCode = $("#code").val();
+            $.post(
+                "/",
+                {
+                    "method": "code",
+                    "code": localCode
+                },
+                function (data) {
+                    if (data["success"] == 1) {
+                        code = localCode;
+                        back();
+                        $("#login").hide();
+                        $("#loggedIn").show();
+                    }
+                }
+            )
+        }
 
         function load(filename) {
             $.post(
@@ -102,7 +131,8 @@
                 {
                     "method": "load",
                     "name": filename,
-                    "user": user
+                    "user": user,
+                    "code": code
                 },
                 function (data) {
                     $("#menuSelect").hide();
@@ -120,7 +150,8 @@
                     "method": "save",
                     "name": name,
                     "user": user,
-                    "content": editor.getMarkdown()
+                    "content": editor.getMarkdown(),
+                    "code": code
                 },
                 function (data) {
                     $("#btn-save").text(name);
@@ -133,7 +164,8 @@
                 "/",
                 {
                     "method": "back",
-                    "name": name
+                    "name": name,
+                    "code": code
                 },
                 function (data) {
                     $("#storyList").empty();
@@ -158,6 +190,7 @@
         }
 
         $(document).ready(function () {
+            $("#loggedIn").hide();
             $("#menuSelect").show();
             $("#menuEdit").hide();
 

@@ -15,9 +15,14 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont, QPixmap
-from requests import post
-from os import system, listdir, getuid, getgid
+from requests import post, get, ConnectionError
+from os import system, listdir, getuid, getgid, path, popen
 import subprocess
+from json import dumps
+from datetime import datetime
+
+date_format = "%Y-%m-%d %H:%M:%S"
+
 
 def get_wifi_ssids():
     wifi = pywifi.PyWiFi()
@@ -45,14 +50,17 @@ class RetrieveID(QThread):
     def run(self):
         # https://gnimble.live
         try:
-            mac = system("ip link show | awk '/ether/ {print $2}' | tail -n 1")
+            mac = popen(
+                "ip link show | awk '/ether/ {print $2}' | tail -n 1"
+            ).readline()
             response = post(
                 "http://127.0.0.1:5000",
                 data={"method": "retrieve_id", "mac_address": mac},
             )
             data = response.json()
             self.finished.emit(data["code"])
-        except:
+        except Exception as e:
+            print(str(e))
             self.finished.emit("connect to the internet\nto sync documents")
 
 
@@ -85,6 +93,7 @@ class WindowSettings(QWidget):
             system(
                 f'nmcli device wifi connect "{self.pw_label.text()}" password "{self.pw_text.text()}"'
             )
+
             self.main_window.setCurrentIndex(0)
             for i in reversed(range(self.file_layout.count())):
                 widget = self.file_layout.itemAt(i).widget()
@@ -95,9 +104,7 @@ class WindowSettings(QWidget):
 
     def addPassword(self, name):
         try:
-            status = system(
-                f'nmcli device wifi connect "{name}"'
-            )
+            status = system(f'nmcli device wifi connect "{name}"')
             if "No network" not in status:
                 self.main_window.setCurrentIndex(0)
         except Exception as e:
@@ -189,8 +196,39 @@ class WindowMenu(QWidget):
                 )
                 self.file_layout.addWidget(file_button)
 
+    def is_connected(self):
+        try:
+            response = get("http://www.google.com", timeout=5)
+            return response.status_code == 200
+        except ConnectionError:
+            return False
+
     def sync(self):
-        self.main_window.setCurrentIndex(2)
+        if (self.is_connected):
+            code = self.label_id.text()
+            response = {"method": "sync", "code": code}
+            stories = {}
+            for f in listdir("stories/"):
+                url = "stories/" + f
+                contents = ""
+                with open(url, "r") as r:
+                    contents = "\n".join(r.readlines())
+                dt = str(path.getmtime(url))
+                print(dt)
+                stories[f] = {
+                    "datetime": dt,
+                    "contents": contents,
+                }
+            response["stories"] = dumps(stories)
+            new = post("http://127.0.0.1:5000", data=response).json()
+            print(new)
+            for f in new["stories"]:
+                if new["stories"][f]["datetime"] > stories[f]["datetime"]:
+                    with open("stories/" + f, "w") as w:
+                        w.write(new["stories"][f]["contents"])
+            self.btn_sync.setText("Sync to Grimble.live")
+        else:
+            self.main_window.setCurrentIndex(2)
 
     def initUI(self):
         scroll_area = QScrollArea(self)
@@ -324,6 +362,7 @@ class WindowText(QWidget):
     def go_back(self):
         self.save_text()
         self.refresh.emit()
+
         main_window.setCurrentIndex(0)
 
     def toggle_bold(self):
