@@ -107,6 +107,14 @@ def api():
         print(stories)
         response = {}
         d = devices(code)
+        for f in listdir("stories/" + d):
+            if f not in stories.keys():
+                url = "stories/" + d + "/" + f
+                with open(url, "r") as r:
+                    response[f] = {
+                        "datetime": str(path.getmtime(url)),
+                        "contents": "\n".join(r.readlines())
+                    }
         for f in stories.keys():
             url = "stories/" + d + "/" + f
             if path.exists(url):

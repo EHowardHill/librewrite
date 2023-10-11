@@ -17,7 +17,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont, QPixmap
 from requests import post, get, ConnectionError
 from os import system, listdir, getuid, getgid, path, popen
-import subprocess
 from json import dumps
 from datetime import datetime
 
@@ -204,7 +203,7 @@ class WindowMenu(QWidget):
             return False
 
     def sync(self):
-        if (self.is_connected):
+        if self.is_connected:
             code = self.label_id.text()
             response = {"method": "sync", "code": code}
             stories = {}
@@ -224,10 +223,15 @@ class WindowMenu(QWidget):
             print(orig.text)
             new = orig.json()
             for f in new["stories"]:
-                if new["stories"][f]["datetime"] > stories[f]["datetime"]:
+                if f in stories:
+                    if new["stories"][f]["datetime"] > stories[f]["datetime"]:
+                        with open("stories/" + f, "w") as w:
+                            w.write(new["stories"][f]["contents"])
+                else:
                     with open("stories/" + f, "w") as w:
                         w.write(new["stories"][f]["contents"])
             self.btn_sync.setText("Sync to Gnimble.live")
+            self.refresh()
         else:
             self.main_window.setCurrentIndex(2)
 
