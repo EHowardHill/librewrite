@@ -219,16 +219,18 @@ class WindowMenu(QWidget):
                     "contents": contents.replace("\n\n","\n"),
                 }
             response["stories"] = dumps(stories)
-            orig = post("https://gnimble.live", data=response)
-            print(orig.text)
-            new = orig.json()
+            new = post("https://gnimble.live", data=response).json()
             for f in new["stories"]:
                 if f in stories:
                     if new["stories"][f]["datetime"] > stories[f]["datetime"]:
                         with open("stories/" + f, "w") as w:
+                            print(" >>> ")
+                            print(new["stories"][f]["contents"])
                             w.write(new["stories"][f]["contents"])
                 else:
                     with open("stories/" + f, "w") as w:
+                        print(" >>> ")
+                        print(new["stories"][f]["contents"])
                         w.write(new["stories"][f]["contents"])
             self.btn_sync.setText("Sync to Gnimble.live")
             self.refresh()
@@ -401,8 +403,7 @@ class WindowText(QWidget):
     def load_text(self):
         try:
             with open(resolve_name(self.file_name), "r") as file:
-                html_content = file.read()
-                self.text_edit.setMarkdown(html_content)
+                self.text_edit.setMarkdown(file.read().replace("\n", "\n\n"))
         except FileNotFoundError:
             self.text_edit.setMarkdown("")
 

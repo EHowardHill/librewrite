@@ -68,7 +68,7 @@ def api():
         file = "stories/" + code + resolve(name)
         if path.exists(file):
             with open(file, "r") as f:
-                content = "\n".join(f.readlines())
+                content = f.read()
         print(name)
         return {"success": 1, "content": content, "name": clean(name)}
 
