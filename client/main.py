@@ -17,15 +17,17 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QTextCharFormat, QTextDocument, QFontDatabase, QFont, QPixmap
 from requests import post
 from os import system, listdir, getuid, getgid
-
+import subprocess
 
 def get_wifi_ssids():
     wifi = pywifi.PyWiFi()
     ssids = []
-    iface = wifi.interfaces()[0]
+    iface = wifi.interfaces()[1]
     iface.scan()
     scan_results = iface.scan_results()
-    ssids = list(sorted(set([result.ssid for result in scan_results if result.ssid != ""])))
+    ssids = list(
+        sorted(set([result.ssid for result in scan_results if result.ssid != ""]))
+    )
     return ssids
 
 
@@ -78,7 +80,32 @@ class WindowSettings(QWidget):
             )
             self.file_layout.addWidget(file_button)
 
+    def connect(self):
+        try:
+            system(
+                f'nmcli device wifi connect "{self.pw_label.text()}" password "{self.pw_text.text()}"'
+            )
+            self.main_window.setCurrentIndex(0)
+            for i in reversed(range(self.file_layout.count())):
+                widget = self.file_layout.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
+        except Exception as e:
+            print(str(e))
+
     def addPassword(self, name):
+        try:
+            status = system(
+                f'nmcli device wifi connect "{name}"'
+            )
+            if "No network" not in status:
+                self.main_window.setCurrentIndex(0)
+        except Exception as e:
+            print(str(e))
+        for i in reversed(range(self.pw_layout.count())):
+            widget = self.pw_layout.itemAt(i).widget()
+            if widget:
+                widget.deleteLater()
         self.pw_layout.addStretch()
         self.pw_label = QLabel(name)
         self.pw_label.setStyleSheet("QLabel { font-size: 48pt; padding: 10px; }")
@@ -86,6 +113,7 @@ class WindowSettings(QWidget):
         self.pw_text = QLineEdit()
         self.pw_layout.addWidget(self.pw_text)
         self.pw_select = QPushButton("Connect")
+        self.pw_select.clicked.connect(self.connect)
         self.pw_layout.addWidget(self.pw_select)
         self.pw_layout.addStretch()
 
