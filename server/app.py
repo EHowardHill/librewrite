@@ -55,6 +55,7 @@ def main():
 def api():
     if request.form.get("method") == "back":
         code = request.form.get("code")
+        system("mkdir -p stories/" + devices(code))
         return {
             "success": 1,
             "results": [[t, decode(t)] for t in listdir("stories/" + devices(code))],
@@ -75,7 +76,7 @@ def api():
         code = devices(request.form.get("code")) + "/"
         system("mkdir -p stories/" + code)
         with open("stories/" + code + encode(request.form.get("name")), "w") as f:
-            f.writelines(request.form.get("content").split("\n"))
+            f.write(request.form.get("content"))
         return {"success": 1}
 
     elif request.form.get("method") == "retrieve_id":
@@ -91,7 +92,7 @@ def api():
         code = random_combo()
         data[mac] = code
         with open("devices.json", "w") as f:
-            f.writelines(dumps(data).split("\n"))
+            f.write(dumps(data))
 
         return {"success": 1, "code": code}
 
