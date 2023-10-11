@@ -403,7 +403,7 @@ class WindowText(QWidget):
     def load_text(self):
         try:
             with open(resolve_name(self.file_name), "r") as file:
-                self.text_edit.setMarkdown(file.read().replace("\n", "\n\n"))
+                self.text_edit.setMarkdown(file.read().replace("\n", "\n\n").replace("<br>", "\n"))
         except FileNotFoundError:
             self.text_edit.setMarkdown("")
 
