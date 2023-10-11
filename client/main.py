@@ -227,7 +227,7 @@ class WindowMenu(QWidget):
                 if new["stories"][f]["datetime"] > stories[f]["datetime"]:
                     with open("stories/" + f, "w") as w:
                         w.write(new["stories"][f]["contents"])
-            self.btn_sync.setText("Sync to Grimble.live")
+            self.btn_sync.setText("Sync to Gnimble.live")
         else:
             self.main_window.setCurrentIndex(2)
 
