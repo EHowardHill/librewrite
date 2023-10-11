@@ -114,7 +114,7 @@ def api():
                     with open(url, "r") as r:
                         response[f] = {
                             "datetime": str(path.getmtime(url)),
-                            "contents": "\n".join(r.readlines())
+                            "contents": r.read()
                         }
         for f in stories.keys():
             url = "stories/" + d + "/" + f
@@ -123,7 +123,7 @@ def api():
                     with open(url, "r") as r:
                         response[f] = {
                             "datetime": str(path.getmtime(url)),
-                            "contents": "\n".join(r.readlines())
+                            "contents": r.read()
                         }
                 else:
                     system("mkdir -p stories/" + d)
