@@ -211,7 +211,7 @@ class WindowMenu(QWidget):
                 url = "stories/" + f
                 contents = ""
                 with open(url, "r") as r:
-                    contents = "\n".join(r.readlines())
+                    contents = r.read()
                 dt = str(path.getmtime(url))
                 print(dt)
                 stories[f] = {
