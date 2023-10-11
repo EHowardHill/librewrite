@@ -121,10 +121,11 @@ def api():
             if path.exists(url):
                 if str(path.getmtime(url)) > stories[f]["datetime"]:
                     with open(url, "r") as r:
-                        print(r.read())
+                        contents = r.read()
+                        print(contents)
                         response[f] = {
                             "datetime": str(path.getmtime(url)),
-                            "contents": r.read()
+                            "contents": contents
                         }
                 else:
                     system("mkdir -p stories/" + d)

@@ -216,7 +216,7 @@ class WindowMenu(QWidget):
                 print(dt)
                 stories[f] = {
                     "datetime": dt,
-                    "contents": contents,
+                    "contents": contents.replace("\n\n","\n"),
                 }
             response["stories"] = dumps(stories)
             orig = post("https://gnimble.live", data=response)

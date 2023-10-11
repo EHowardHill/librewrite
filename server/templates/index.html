@@ -144,6 +144,7 @@
         }
 
         function save() {
+            alert(editor.getMarkdown());
             $.post(
                 "/",
                 {
@@ -156,7 +157,7 @@
                 function (data) {
                     $("#btn-save").text(name);
                 }
-            )
+            );
         }
 
         function back() {
