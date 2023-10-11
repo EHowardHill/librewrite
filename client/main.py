@@ -54,7 +54,7 @@ class RetrieveID(QThread):
                 "ip link show | awk '/ether/ {print $2}' | tail -n 1"
             ).readline()
             response = post(
-                "http://127.0.0.1:5000",
+                "https://gnimble.live",
                 data={"method": "retrieve_id", "mac_address": mac},
             )
             data = response.json()
@@ -220,8 +220,9 @@ class WindowMenu(QWidget):
                     "contents": contents,
                 }
             response["stories"] = dumps(stories)
-            new = post("http://127.0.0.1:5000", data=response).json()
-            print(new)
+            orig = post("https://gnimble.live", data=response)
+            print(orig.text)
+            new = orig.json()
             for f in new["stories"]:
                 if new["stories"][f]["datetime"] > stories[f]["datetime"]:
                     with open("stories/" + f, "w") as w:
