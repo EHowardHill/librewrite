@@ -24,14 +24,11 @@ date_format = "%Y-%m-%d %H:%M:%S"
 
 
 def get_wifi_ssids():
-    wifi = pywifi.PyWiFi()
-    ssids = []
-    iface = wifi.interfaces()[1]
-    iface.scan()
-    scan_results = iface.scan_results()
+    v = popen('iw dev wlan0 scan | grep "SSID"').read()
     ssids = list(
-        sorted(set([result.ssid for result in scan_results if result.ssid != ""]))
+        sorted(set([r.strip().replace("SSID: ", "") for r in v.split("\n") if r.strip() != "* SSID List"]))
     )
+    ssids = [s for s in ssids if s != ""]
     return ssids
 
 
@@ -90,7 +87,7 @@ class WindowSettings(QWidget):
     def connect(self):
         try:
             system(
-                f'nmcli device wifi connect "{self.pw_label.text()}" password "{self.pw_text.text()}"'
+                f'iw dev wlan0 connect "{self.pw_label.text()}" key 0: "{self.pw_text.text()}"'
             )
 
             self.main_window.setCurrentIndex(0)
@@ -103,7 +100,7 @@ class WindowSettings(QWidget):
 
     def addPassword(self, name):
         try:
-            status = system(f'nmcli device wifi connect "{name}"')
+            status = system(f'iw dev wlan0 connect "{name}"')
             if "No network" not in status:
                 self.main_window.setCurrentIndex(0)
         except Exception as e:
