@@ -200,7 +200,7 @@ class WindowMenu(QWidget):
             return False
 
     def sync(self):
-        if self.is_connected:
+        if self.is_connected():
             code = self.label_id.text()
             response = {"method": "sync", "code": code}
             stories = {}
@@ -234,6 +234,9 @@ class WindowMenu(QWidget):
                             w.write(new["stories"][f]["contents"])
                 self.btn_sync.setText("Sync to Gnimble.live")
                 self.refresh()
+
+                if "connect" in self.label_id.text:
+                    self.retrieve_id()
             except:
                 self.main_window.setCurrentIndex(2)
 
