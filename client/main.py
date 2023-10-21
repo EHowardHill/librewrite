@@ -28,7 +28,7 @@ def get_wifi_ssids():
     ssids = list(
         sorted(set([r.strip().replace("SSID: ", "") for r in v.split("\n") if r.strip() != "* SSID List"]))
     )
-    ssids = [s for s in ssids if s != ""]
+    ssids = [s for s in ssids if s not in ["SSID:", ""]]
     return ssids
 
 
