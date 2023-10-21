@@ -201,6 +201,18 @@ class WindowMenu(QWidget):
 
     def sync(self):
         if self.is_connected():
+
+            if "connect" in self.label_id.text():
+                mac = popen(
+                    "ip link show | awk '/ether/ {print $2}' | tail -n 1"
+                ).readline()
+                response = post(
+                    "https://gnimble.live",
+                    data={"method": "retrieve_id", "mac_address": mac},
+                )
+                data = response.json()
+                self.label_id.setText(data["code"])
+
             code = self.label_id.text()
             response = {"method": "sync", "code": code}
             stories = {}
@@ -236,9 +248,6 @@ class WindowMenu(QWidget):
                         w.write(new["stories"][f]["contents"])
             self.btn_sync.setText("Sync to Gnimble.live")
             self.refresh()
-
-            if "connect" in self.label_id.text():
-                self.retrieve_id()
 
         else:
             self.label_id.setText("connect to the internet\nto sync documents")
