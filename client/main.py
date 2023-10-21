@@ -216,21 +216,27 @@ class WindowMenu(QWidget):
                     "contents": contents.replace("\n\n","\n"),
                 }
             response["stories"] = dumps(stories)
-            new = post("https://gnimble.live", data=response).json()
-            for f in new["stories"]:
-                if f in stories:
-                    if new["stories"][f]["datetime"] > stories[f]["datetime"]:
+
+            try:
+                new = post("https://gnimble.live", data=response).json()
+
+                for f in new["stories"]:
+                    if f in stories:
+                        if new["stories"][f]["datetime"] > stories[f]["datetime"]:
+                            with open("stories/" + f, "w") as w:
+                                print(" >>> ")
+                                print(new["stories"][f]["contents"])
+                                w.write(new["stories"][f]["contents"])
+                    else:
                         with open("stories/" + f, "w") as w:
                             print(" >>> ")
                             print(new["stories"][f]["contents"])
                             w.write(new["stories"][f]["contents"])
-                else:
-                    with open("stories/" + f, "w") as w:
-                        print(" >>> ")
-                        print(new["stories"][f]["contents"])
-                        w.write(new["stories"][f]["contents"])
-            self.btn_sync.setText("Sync to Gnimble.live")
-            self.refresh()
+                self.btn_sync.setText("Sync to Gnimble.live")
+                self.refresh()
+            except:
+                self.main_window.setCurrentIndex(2)
+
         else:
             self.main_window.setCurrentIndex(2)
 
