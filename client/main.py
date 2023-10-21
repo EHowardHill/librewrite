@@ -234,7 +234,7 @@ class WindowMenu(QWidget):
             self.btn_sync.setText("Sync to Gnimble.live")
             self.refresh()
 
-            if "connect" in self.label_id.text:
+            if "connect" in self.label_id.text():
                 self.retrieve_id()
 
         else:
