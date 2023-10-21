@@ -216,8 +216,11 @@ class WindowMenu(QWidget):
                     "contents": contents.replace("\n\n","\n"),
                 }
             response["stories"] = dumps(stories)
+            print(response)
 
-            new = post("https://gnimble.live", data=response).json()
+            new = post("https://gnimble.live", data=response)
+            print(new.text)
+            new = new.json()
 
             for f in new["stories"]:
                 if f in stories:
