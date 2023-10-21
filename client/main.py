@@ -238,7 +238,8 @@ class WindowMenu(QWidget):
                 self.retrieve_id()
 
         else:
-            self.main_window.setCurrentIndex(2)
+            self.label_id.setText("connect to the internet\nto sync documents")
+            #self.main_window.setCurrentIndex(2)
 
     def initUI(self):
         scroll_area = QScrollArea(self)
